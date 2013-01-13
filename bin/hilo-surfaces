@@ -1,0 +1,47 @@
+#!/usr/bin/env ruby
+require_relative '../hilo'
+
+GROUPERS = {
+  :simple => lambda do |s|
+    s[0]
+  end,
+  :smart => lambda do |s|
+    conversions = {"RE" => "RC","HF" => "HGG","HG" => "HGG","RCE" => "RC","RB" => "RA","RAB" => "RA","RF" => "RC","HFG" => "HGG","HB" => "H","HC" => "H","RG" => "T","TF" => "HGG","TGG" => "HGG","IG" => "T","HEF" => "HGG","HE" => "H"}
+    conversions[s] || s
+  end,
+  :identity => lambda{|s| s}
+}
+
+grouper = if ARGV.delete("--simple")
+            :simple
+          elsif ARGV.delete("--smart")
+            :smart
+          else
+            :identity
+          end
+grouper = GROUPERS[grouper]
+
+surfaces = Hash.new(0)
+last_km = nil
+last_surface = nil
+final_km = nil
+Hilo.reader do |point|
+  if point.rsurface
+    if last_surface
+      surfaces[grouper[last_surface]] += point.km - last_km
+    end
+    last_km = point.km
+    last_surface = point.rsurface
+  end
+  final_km = point.km
+end
+
+# case where last point does not have an rsurface (as it normally wouldn't), count that last segment too
+if last_surface
+  surfaces[grouper[last_surface]] += final_km - last_km
+end
+
+
+surfaces.each do |surface, value|
+  print "%9.2f, %s\n" % [value, surface]
+end

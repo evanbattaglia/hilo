@@ -1,5 +1,13 @@
 # Hilo notes
 
+TODO:
+  elevation in vikextractor.lua (copy column over to current hilo file)
+
+--------------
+
+
+
+
 What we would like:
   * total surface numbers (how much walked on what surface)
   * surface numbers by section (trail [wyoming, ict, gwt, imt connector], overall portion)

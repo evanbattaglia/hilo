@@ -39,7 +39,15 @@ class Hilo
     file.close  unless file.is_a?(String)
   end
 
+  def self.reader
+    hilo = Hilo.new(ARGV[0] || STDIN)
+    hilo.points.each do |p|
+      yield p
+    end
+  end
+
   def self.filter(insitu = false)
+    insitu = ARGV.delete("-i")
     hilo = Hilo.new(ARGV[0] || STDIN)
     hilo.points.each do |p|
       yield p

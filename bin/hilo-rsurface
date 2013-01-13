@@ -1,6 +1,12 @@
 #!/usr/bin/env ruby
 require_relative '../hilo'
-require 'ruby-debug'
+
+#
+# hilo-rsurface
+# Extract rsurface from wpcomment
+#
+
+
 # type -> X | majortype grade? | I igrade?
 # majortype -> H | T | M | R
 # grade -> A | B | C | E | F | G | AB | BC | CE | EF | FG | GG | GGG
@@ -20,8 +26,7 @@ def warning(point,e)
 end
 
 last_surface = last_real_surface = nil
-insitu = ARGV.delete("-i")
-Hilo.filter(insitu) do |point|
+Hilo.filter do |point|
   incoming_surface = nil
 
   word = nil
