@@ -14,6 +14,45 @@ class Hilo
 
   attr_reader :points
 
+  class Range
+    attr_reader :start, :stop, :field
+    def initialize(start, stop, field)
+      @start, @stop, @field = start, stop, field
+      raise "Range start doesn't have value!" if value.nil?
+    end
+    def value
+      start[field]
+    end
+    def start_km
+      start.km
+    end
+    def stop_km
+      stop.km
+    end
+    def length
+      stop_km - start_km
+    end
+  end
+
+  def ranges(field)
+    [].tap do |ranges|
+      last_point = nil
+      points.each do |point|
+        if point[field]
+          if last_point
+            ranges << Range.new(last_point, point, field)
+          end
+          last_point = point
+        end
+      end
+
+      # case where last point does not have that field (as it normally wouldn't), count that last segment too
+      if last_point && last_point != points.last
+        ranges << Range.new(last_point, points.last, field)
+      end
+    end
+  end
+
   def initialize(f=nil)
     if f.is_a? String
       @filename = f
