@@ -1,0 +1,4 @@
+#!/bin/bash
+HILOSCRIPT=`dirname $0`/../vikextractor.lua
+viking --lua-headless --lua "$HILOSCRIPT" "$1" --lua-arg "$2"
+
