@@ -85,6 +85,7 @@ function run(vtl, outfilename)
       local dist = coord.diff(tp:coord(), wp:coord())
       if dist < 300 and (nearest_dist == nil or dist < nearest_dist) then
         nearest_dist = dist
+        nearest_timestamp = tp:timestamp()
         nearest_len = len
       end
       if last_coord then
@@ -98,7 +99,8 @@ function run(vtl, outfilename)
         wpname,
         string.gsub(wp:comment() or '', '\n', ' ; '),
         wp:coord():lat(),
-        wp:coord():lon()
+        wp:coord():lon(),
+        nearest_timestamp
       }
       write(csv_line(fields), outfile)
       io.flush()

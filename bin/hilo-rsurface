@@ -1,0 +1,88 @@
+#!/usr/bin/env ruby
+require_relative '../hilo'
+require 'ruby-debug'
+# type -> X | majortype grade? | I igrade?
+# majortype -> H | T | M | R
+# grade -> A | B | C | E | F | G | AB | BC | CE | EF | FG | GG | GGG
+# igrade -> F | G | FG | GG | GGG
+# desttype -> type | type >
+# word -> type desttype+ | type [3-5] | LT | FT
+# type type | type type > | type type > type | type type 
+
+EXCEPTIONS = ['TH', 'IMT', 'MATTER']
+TYPE_REGEX = '(X|I(E|F|G|EF|FG|GG|GGG)?|[HTMR](A|B|C|E|F|G|AB|BC|CE|EF|FG|GG|GGG)?)'
+
+def error(point,e)
+  raise "ERROR: Point #{point.wpname} (km #{point.km}): #{e}"
+end
+def warning(point,e)
+  STDERR.write("WARNING: Point #{point.wpname} (km #{point.km}): #{e}\n")
+end
+
+last_surface = last_real_surface = nil
+insitu = ARGV.delete("-i")
+Hilo.filter(insitu) do |point|
+  incoming_surface = nil
+
+  word = nil
+
+  next  unless point.wpcomment.is_a? String
+  comment = point.wpcomment.gsub(/\b#{EXCEPTIONS.join('|')}\b/, '')
+  comment = comment.gsub(/\([^)]*\)/, '') # ignore parenthesized expressions
+
+
+  # style XHFGRCE>RCE:
+  if comment =~ /(^|[^A-Z0-9>])(#{TYPE_REGEX}(#{TYPE_REGEX}>?)+)($|[^A-Z0-9>])/
+    word = $2
+
+    surfaces = word.split(/([XIHTMR][^XIHTMR]*)/).reject{|x| x.empty?}
+
+    if dest = surfaces.find{|s| s.include? '>'}
+      point.rsurface = dest[0..-2]
+    elsif surfaces.count == 2
+      point.rsurface = surfaces.last
+    elsif surfaces[1..-1].uniq.length == 1
+      # all surfaces except for first are same time. no ambiguity.
+      point.rsurface = surfaces.last
+    else
+      error(point, "More than 2 surfaces but no arrow given: #{word}")
+    end
+
+    incoming_surface = surfaces.first
+
+  # type alone. TODO: I'm worried that this may be too wide.
+  elsif comment =~ /(^|[^A-Z0-9>])#{TYPE_REGEX}($|[^A-Z0-9>])/
+    word = point.rsurface = $2
+
+  # style RCE3
+  elsif comment =~ /\b((#{TYPE_REGEX})[3-5])\b/
+    word = $1
+    point.rsurface = incoming_surface = $2
+  # LT & FT
+  elsif comment =~ /\bLT\b/
+    # TODO: might want to loosen this up. we can loose an T (ATV trail) or I (abandoned road)
+    error(point, "LT: we were previously on #{last_real_surface}, not an H or M")  unless last_real_surface =~ /^[HM]/
+    point.rsurface = 'X'
+  elsif comment =~ /\bXCTY\b/
+    point.rsurface = 'X'
+  elsif comment =~ /\bFT\b/
+    error(point, "FT: we were on #{last_surface} not X")  unless last_surface == 'X'
+    error(point, "FT: we were previously on #{last_real_surface}, not an H or M")  unless last_real_surface =~ /^[HM]/
+    point.rsurface = last_real_surface
+  end
+
+  # Sanity checking: incoming surface should roughly the same
+  if last_surface && incoming_surface && last_surface[0] != incoming_surface[0]
+    types = [last_surface[0], incoming_surface[0]].sort.join
+    unless ['HX', 'HM', 'MT'].include? types
+      warning(point, "Incoming surface #{incoming_surface} (from word #{word}) does not match last surface #{last_surface}")
+    end
+  end
+
+  # save last surface for FT and sanity checking
+  if point.rsurface
+    last_surface = point.rsurface
+    last_real_surface = point.rsurface  unless point.rsurface == 'X'
+  end
+end
+
