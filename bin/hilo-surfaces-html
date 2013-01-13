@@ -1,0 +1,45 @@
+#!/usr/bin/env ruby
+require_relative '../hilo'
+
+#TODO: share these groupers with hilo-surfaces
+GROUPERS = {
+  :simple => lambda do |s|
+    s[0]
+  end,
+  :smart => lambda do |s|
+    conversions = {"RE" => "RC","HF" => "HGG","HG" => "HGG","RCE" => "RC","RB" => "RA","RAB" => "RA","RF" => "RC","HFG" => "HGG","HB" => "H","HC" => "H","RG" => "T","TF" => "HGG","TGG" => "HGG","IG" => "T","HEF" => "HGG","HE" => "H"}
+    conversions[s] || s
+  end,
+  :identity => lambda{|s| s}
+}
+
+grouper = if ARGV.delete("--simple")
+            :simple
+          elsif ARGV.delete("--smart")
+            :smart
+          else
+            :identity
+          end
+grouper = GROUPERS[grouper]
+
+###################
+
+COLORS = {
+  "H" => "#2c7206",
+  "HGG" => "#116a56",
+  "X" => "#112d6a",
+  "T" => "#a95f00",
+  "M" => "#c3c116",
+  "RC" => "#a90000",
+  "RA" => "#c90193",
+}
+
+print "<html><body>\n"
+Hilo.new(ARGV[0]).ranges(:rsurface).each do |range|
+  x = (range.start_km*2).to_i
+  width = (range.stop_km*2).to_i - (range.start_km*2).to_i
+
+  style = "position: absolute; height: 30px; top: 10; left: #{x}; width: #{width}; background-color: #{COLORS[grouper[range.value]]}"
+  print "<div style=\"#{style}\"> </div>\n"
+end
+print "</body></html>\n"
