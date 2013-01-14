@@ -1,4 +1,6 @@
 #!/usr/bin/env ruby
+# encoding: UTF-8
+
 require_relative '../hilo'
 
 #
@@ -15,8 +17,8 @@ require_relative '../hilo'
 # word -> type desttype+ | type [3-5] | LT | FT
 # type type | type type > | type type > type | type type 
 
-EXCEPTIONS = ['TH', 'IMT', 'MATTER']
-TYPE_REGEX = '(X|I(E|F|G|EF|FG|GG|GGG)?|[HTMR](A|B|C|E|F|G|AB|BC|CE|EF|FG|GG|GGG)?)'
+EXCEPTIONS = ['TH', 'IMT', 'MATTER', 'I', '[A-Z]* IS', 'MIGHT', 'RIGHT', 'HITCH', '[A-Z]* TO']
+TYPE_REGEX = '(X|Ṗ|I(E|F|G|EF|FG|GG|GGG)?|R(A|B|C|E|F|G|AB|BC|CE|EF|FG|GG|GGG)|[HTM](A|B|C|E|F|G|AB|BC|CE|EF|FG|GG|GGG)?)'
 
 def error(point,e)
   raise "ERROR: Point #{point.wpname} (km #{point.km}): #{e}"
@@ -32,7 +34,7 @@ Hilo.filter do |point|
   word = nil
 
   next  unless point.wpcomment.is_a? String
-  comment = point.wpcomment.gsub(/\b#{EXCEPTIONS.join('|')}\b/, '')
+  comment = point.wpcomment.gsub(/\b(#{EXCEPTIONS.join('|')})\b/, '')
   comment = comment.gsub(/\([^)]*\)/, '') # ignore parenthesized expressions
 
 
@@ -40,7 +42,7 @@ Hilo.filter do |point|
   if comment =~ /(^|[^A-Z0-9>])(#{TYPE_REGEX}(#{TYPE_REGEX}>?)+)($|[^A-Z0-9>])/
     word = $2
 
-    surfaces = word.split(/([XIHTMR][^XIHTMR]*)/).reject{|x| x.empty?}
+    surfaces = word.split(/([ṖXIHTMR][^ṖXIHTMR]*)/).reject{|x| x.empty?}
 
     if dest = surfaces.find{|s| s.include? '>'}
       point.rsurface = dest[0..-2]
@@ -64,11 +66,11 @@ Hilo.filter do |point|
     word = $1
     point.rsurface = incoming_surface = $2
   # LT & FT
-  elsif comment =~ /\bLT\b/
+  elsif comment =~ /\b(LT|LOSTTRAIL)\b/
     # TODO: might want to loosen this up. we can loose an T (ATV trail) or I (abandoned road)
     error(point, "LT: we were previously on #{last_real_surface}, not an H or M")  unless last_real_surface =~ /^[HM]/
     point.rsurface = 'X'
-  elsif comment =~ /\bXCTY\b/
+  elsif comment =~ /\bXCTY\b/ || (comment =~ /\bXCTY/ && ! (comment =~ /END/))
     point.rsurface = 'X'
   elsif comment =~ /\bFT\b/
     error(point, "FT: we were on #{last_surface} not X")  unless last_surface == 'X'

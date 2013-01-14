@@ -81,11 +81,14 @@ function run(vtl, outfilename)
     local nearest_len = nil
     local len = 0
     local last_coord = nil
+    local nearest_timestamp = nil
+    local nearest_altitude = nil
     for tp in track:trackpoints() do
       local dist = coord.diff(tp:coord(), wp:coord())
-      if dist < 300 and (nearest_dist == nil or dist < nearest_dist) then
+      if dist < 100 and (nearest_dist == nil or dist < nearest_dist) then
         nearest_dist = dist
         nearest_timestamp = tp:timestamp()
+        nearest_altitude = tp:altitude()
         nearest_len = len
       end
       if last_coord then
@@ -100,7 +103,8 @@ function run(vtl, outfilename)
         string.gsub(wp:comment() or '', '\n', ' ; '),
         wp:coord():lat(),
         wp:coord():lon(),
-        nearest_timestamp
+        nearest_timestamp,
+        nearest_altitude
       }
       write(csv_line(fields), outfile)
       io.flush()

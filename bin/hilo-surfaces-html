@@ -1,14 +1,32 @@
 #!/usr/bin/env ruby
+# encoding: UTF-8
 require_relative '../hilo'
 
 #TODO: share these groupers with hilo-surfaces
+
 GROUPERS = {
   :simple => lambda do |s|
     s[0]
   end,
   :smart => lambda do |s|
-    conversions = {"RE" => "RC","HF" => "HGG","HG" => "HGG","RCE" => "RC","RB" => "RA","RAB" => "RA","RF" => "RC","HFG" => "HGG","HB" => "H","HC" => "H","RG" => "T","TF" => "HGG","TGG" => "HGG","IG" => "T","HEF" => "HGG","HE" => "H"}
+    conversions = {"RE" => "RC","HF" => "HGG","HG" => "HGG","RCE" => "RC","RB" => "RA","RAB" => "RA","RF" => "RC","HFG" => "HGG","HB" => "H","HC" => "H","RG" => "T","TF" => "HGG","TGG" => "HGG","IG" => "T","HEF" => "HGG","HE" => "H",
+                   "Ṗ" => "H",
+    "REF" => "RC",  "MF" => "M",    "TE" => "T",    "RFG" => "RT",    "TG" => "T",    "ME" => "M",    "IFG" => "M",    "MC" => "M",    "I" => "T", # ACTUALLY maybe "H"
+    "MG" => "M"
+    }
     conversions[s] || s
+  end,
+  :roadortrail => lambda do |s|
+    conversions = {
+      'RA' => 'RA',
+      'RC' => 'RA',
+      'H' => 'H',
+      'HGG' => 'H',
+      'M' => 'H',
+      'X' => 'H',
+      'T' => 'H'
+    }
+    conversions[GROUPERS[:smart][s]] || s
   end,
   :identity => lambda{|s| s}
 }
@@ -17,6 +35,8 @@ grouper = if ARGV.delete("--simple")
             :simple
           elsif ARGV.delete("--smart")
             :smart
+          elsif ARGV.delete("--roadortrail")
+            :roadortrail
           else
             :identity
           end
