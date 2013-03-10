@@ -62,7 +62,9 @@ function write(s, outfile)
   io.write(s)
 end
 
-function run(vtl, outfilename)
+function run(vw, outfilename)
+  local vtl = vw:top_trwlayer()
+
   local outfile = nil
   if (outfilename) then
     outfile = io.open(outfilename, "w")
