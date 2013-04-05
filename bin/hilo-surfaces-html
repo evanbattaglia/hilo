@@ -28,6 +28,18 @@ GROUPERS = {
     }
     conversions[GROUPERS[:smart][s]] || s
   end,
+  :xcty => lambda do |s|
+    conversions = {
+      'RA' => 'RA',
+      'RC' => 'RA',
+      'H' => 'RA',
+      'M' => 'RA',
+      'T' => 'RA',
+      'X' => 'X',
+      'HGG' => 'X'
+    }
+    conversions[s] || conversions[GROUPERS[:smart][s]] || s
+  end,
   :identity => lambda{|s| s}
 }
 
@@ -37,6 +49,8 @@ grouper = if ARGV.delete("--simple")
             :smart
           elsif ARGV.delete("--roadortrail")
             :roadortrail
+          elsif ARGV.delete("--xcty")
+            :xcty
           else
             :identity
           end
