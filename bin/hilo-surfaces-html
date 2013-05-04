@@ -43,6 +43,8 @@ GROUPERS = {
   :identity => lambda{|s| s}
 }
 
+textmode = ARGV.delete('--text')
+
 grouper = if ARGV.delete("--simple")
             :simple
           elsif ARGV.delete("--smart")
@@ -68,12 +70,18 @@ COLORS = {
   "RA" => "#c90193",
 }
 
-print "<html><body>\n"
-Hilo.new(ARGV[0]).ranges(:rsurface).each do |range|
-  x = (range.start_km*2).to_i
-  width = (range.stop_km*2).to_i - (range.start_km*2).to_i
+if textmode
+  Hilo.new(ARGV[0]).ranges(:rsurface).each do |range|
+    puts "#{grouper[range.value]},#{range.start_km},#{range.stop_km}"
+  end
+else
+  print "<html><body>\n"
+  Hilo.new(ARGV[0]).ranges(:rsurface).each do |range|
+    x = (range.start_km*2).to_i
+    width = (range.stop_km*2).to_i - (range.start_km*2).to_i
 
-  style = "position: absolute; height: 30px; top: 10; left: #{x}; width: #{width}; background-color: #{COLORS[grouper[range.value]]}"
-  print "<div style=\"#{style}\"> </div>\n"
+    style = "position: absolute; height: 30px; top: 10; left: #{x}; width: #{width}; background-color: #{COLORS[grouper[range.value]]}"
+    print "<div style=\"#{style}\"> </div>\n"
+  end
+  print "</body></html>\n"
 end
-print "</body></html>\n"

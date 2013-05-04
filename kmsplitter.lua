@@ -90,7 +90,7 @@ theStart )
 end
 
 function run(vw, thresholds, outfilename)
-  thresholds = map(function(t) return(t * 1609.34) end, thresholds:split(","))
+  thresholds = map(function(t) return(t * 1000) end, thresholds:split(","))
 
   local i = 1
   local vtl = vw:top_trwlayer()
