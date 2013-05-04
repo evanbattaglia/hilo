@@ -1,0 +1,10 @@
+#!/usr/bin/env ruby
+# encoding: UTF-8
+
+require_relative '../hilo'
+hilo = Hilo.new(ARGV[0] || STDIN)
+p1 = hilo.points.find{|p| p.wpname == ARGV[1]}
+p2 = hilo.points.find{|p| p.wpname == ARGV[2]}
+kph = (p2.km - p1.km) / (p2.visited.to_i - p1.visited.to_i) * 3600
+mph = kph * 0.621371
+puts "#{mph} mph"
